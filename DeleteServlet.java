@@ -1,12 +1,14 @@
-package com.RegLogin.Example;
+package com.bhargavi.hbs;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
+import javax.persistence.Query;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -15,31 +17,34 @@ import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/DeleteServlet")
 public class DeleteServlet extends HttpServlet {
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-
-		response.setContentType("text/html");
-		PrintWriter pw = response.getWriter();
-		String email = request.getParameter("em");
-		String password = request.getParameter("pw");
-		try {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/test?", "root", "Dairymilk44@");
-			PreparedStatement pst = con.prepareStatement("delete from userinfo where email =? and password=?");
-			pst.setString(1, email);
-			pst.setString(2, password);
-			//pst.execute();
-			int rowsDeleted = pst.executeUpdate();
-			if (rowsDeleted > 0) {
-				pw.print("User details are deleted");
+		protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+			response.setContentType("text/html");
+			PrintWriter pw = response.getWriter();
+			String userName = request.getParameter("un");
+			String password = request.getParameter("pw");
+			
+			EntityManagerFactory factory = Persistence.createEntityManagerFactory("emp");
+			EntityManager manager =    factory.createEntityManager();
+			EntityTransaction transaction = manager.getTransaction();
+			transaction.begin();
+	     	Query query = manager
+					.createQuery("delete from AssignmentDTO  where userName='" + userName + "' and password ='" + password + "'");
+			AssignmentDTO dto = new AssignmentDTO();
+			int rows = query.executeUpdate();
+			if (rows>0) {
+				pw.print("deleted Successfully....");
 			} else {
-				pw.print("No result found");
+				pw.print("delete failed please try again");
+				RequestDispatcher rd = request.getRequestDispatcher("delete.html");
+				rd.include(request, response);
 			}
-		} catch (ClassNotFoundException e) {
-			pw.print("Deletion failed try again");
-		} catch (SQLException e) {
-			e.printStackTrace();
+			transaction.commit();
+			manager.close();
+			factory.close();
+			
 		}
 
-	}
-}
+		
+		}
+
